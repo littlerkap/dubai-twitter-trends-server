@@ -1,4 +1,4 @@
-var Twitter = require('Twitter');
+var Twitter = require('twitter');
 
 var client = new Twitter({
     consumer_key: "YJKeawjOfKnqn0gseviNffQ2f",

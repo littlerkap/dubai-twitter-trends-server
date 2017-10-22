@@ -14,7 +14,7 @@ router.get('/', function (req, res, next) {
       var aTrends = trends[0].trends; //Get trends in Array
       var _trends = _.take(aTrends, 25); // 25 Trends taken from the beginning.
 
-      // Send response with status code 200 and data
+      // Send response with data and status code 200
       res.status(200);
       res.json({
         success: true,
@@ -22,7 +22,7 @@ router.get('/', function (req, res, next) {
       });
     })
     .catch(function (error) {
-      // Send response with status code 500 and error
+      // Send response with error objectand  status code 500
       res.status(500);
       res.json({
         success: false,
