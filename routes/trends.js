@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
-var client = require('../twitter-config'); // Twitter API client
 var _ = require('lodash');
+var client = require('../twitter-config'); // Twitter API client
+var utils = require('../utils/utils'); // Helper function module
 
 /* GET top 25 trending topics in dubai. */
 router.get('/', function (req, res, next) {
@@ -29,6 +30,54 @@ router.get('/', function (req, res, next) {
         error: error[0]
       });
     })
+});
+
+router.get('/search', function (req, res, next) {
+  var searchQuery = req.query.q; // Get query param 'q' from query string
+
+  client.get('search/tweets', {
+      q: searchQuery,
+      count: 25
+    })
+    .then(function (tweets) {
+      // Array of keys that should be reduced from the actual tweet object
+      var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'quote_count', 'retweet_count', 'favorite_count'];
+      var _tweets = utils.reduceCollection(tweets.statuses, tweetObjKeys);
+
+      console.log(tweets.search_metadata.count);
+
+      // Send response with data and status code 200
+      res.status(200);
+      res.json({
+        success: true,
+        data: _tweets
+      });
+    })
+    .catch(function (error) {
+      // Send response with error objectand  status code 500
+      res.status(500);
+      res.json({
+        success: false,
+        error: error[0]
+      });
+    });
+
+  // client.stream('statuses/filter', {
+  //   track: searchQuery
+  // }, function (stream) {
+  //   stream.on('data', function (tweets) {
+  //     var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'quote_count', 'retweet_count', 'favorite_count'];
+  //     var _tweets = utils.reduceCollection(tweets.statuses, tweetObjKeys);
+  //     res.json({
+  //       data: tweets
+  //     });
+  //   });
+  //   stream.on('error', function (error) {
+  //     res.json({
+  //       error: error
+  //     })
+  //   });
+  // });
 });
 
 module.exports = router;
