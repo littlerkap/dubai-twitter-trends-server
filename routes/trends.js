@@ -3,6 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var client = require('../twitter-config'); // Twitter API client
 var utils = require('../utils/utils'); // Helper function module
+var socketapi = require('../utils/socketapi');
 
 /* GET top 25 trending topics in dubai. */
 router.get('/', function (req, res, next) {
@@ -41,7 +42,7 @@ router.get('/search', function (req, res, next) {
     })
     .then(function (tweets) {
       // Array of keys that should be reduced from the actual tweet object
-      var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'quote_count', 'retweet_count', 'favorite_count'];
+      var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'retweet_count', 'favorite_count'];
       var _tweets = utils.reduceCollection(tweets.statuses, tweetObjKeys);
 
       console.log(tweets.search_metadata.count);
@@ -52,6 +53,8 @@ router.get('/search', function (req, res, next) {
         success: true,
         data: _tweets
       });
+
+      socketapi.getRealtimeTweets();
     })
     .catch(function (error) {
       // Send response with error objectand  status code 500
