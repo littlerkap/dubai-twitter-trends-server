@@ -29,7 +29,7 @@ router.get('/', function (req, res, next) {
         success: false,
         error: error[0]
       });
-    })
+    });
 });
 
 router.get('/search', function (req, res, next) {
@@ -61,23 +61,6 @@ router.get('/search', function (req, res, next) {
         error: error[0]
       });
     });
-
-  // client.stream('statuses/filter', {
-  //   track: searchQuery
-  // }, function (stream) {
-  //   stream.on('data', function (tweets) {
-  //     var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'quote_count', 'retweet_count', 'favorite_count'];
-  //     var _tweets = utils.reduceCollection(tweets.statuses, tweetObjKeys);
-  //     res.json({
-  //       data: tweets
-  //     });
-  //   });
-  //   stream.on('error', function (error) {
-  //     res.json({
-  //       error: error
-  //     })
-  //   });
-  // });
 });
 
 module.exports = router;
