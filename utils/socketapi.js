@@ -1,47 +1,78 @@
 var socket_io = require('socket.io');
 var io = socket_io();
 var client = require('../twitter-config'); // Twitter API client
+var utils = require('../utils/utils'); // Helper module
 var _ = require('lodash');
 
+/**
+ * Socket module
+ * @module socketapi
+ */
 var socketapi = {
+  // Global socket io object
   io: io,
+
+  /**
+   * Fetch realtime tweets through socket connection and Twitter streaming APIs
+   */
   getRealtimeTweets: function () {
-    io.once('connection', (socket) => {
-      console.log('user connected');
+    /**
+     * Socket: 'connection' event listener
+     */
+    io.once('connection', function (socket) {
       var stream;
 
+      /**
+       * Socket: 'find-tweet' event listener. Receives event from socket.
+       * @function {void} Callback funciton called when socket receives 'find-tweet' event 
+       *   @param {string} query - Keyword to track
+       */
       socket.on('find-tweet', function (query) {
-        console.log('query:', query);
+        /**
+         * Call to Twitter stream api: Filter realtime Tweets. 
+         */
+        stream = client.stream('statuses/filter', {
+          track: query
+        });
 
-        // FIX for issue 'Exceeded connection limit for user'
-          console.log('get stream data');
-          stream = client.stream('statuses/filter', {
-            track: query
+        /**
+         * Twitter stream: 'data' event listener
+         * @function {void} Callback funciton called when socket receives 'find-tweet' event 
+         *   @param {string} event - Tweet object
+         */
+        stream.on('data', function (event) {
+          // Reduce tweet object using lodash function
+          var tweet = _.pick(event, utils.tweetObjKeys);
+          tweet.isNew = true;
+
+          console.log(event && event.text);
+
+          /**
+           * Emits 'tweet' event to socket
+           */
+          socket.emit('tweet', {
+            tweet: tweet
           });
+        });
 
-          stream.on('data', function (event) {
-            console.log(event && event.text);
-            var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'retweet_count', 'favorite_count'];
-            var tweet = _.pick(event, tweetObjKeys);
-            tweet.isNew = true;
-
-            socket.emit('tweet', {
-              tweet: tweet
-            });
-          });
-
-          stream.on('error', function (error) {
-            console.log(error);
-          });
+        /**
+         * Twitter stream: 'error' event listeners\
+         * Just log on console
+         */
+        stream.on('error', function (error) {
+          console.log(error);
+        });
       });
 
+      /**
+       * Socket: 'disconnect' event listener. Receives event from socket.
+       * Destroy stream on socket disconnect event. It'll stop previous keyword tracking
+       */
       socket.on('disconnect', function () {
-        console.log('user disconnected');
         stream.destroy();
       });
     });
   }
 }
-
 
 module.exports = socketapi;

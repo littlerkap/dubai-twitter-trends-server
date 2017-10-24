@@ -2,16 +2,32 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var bodyParser = require('body-parser');
+var fs = require('fs')
 var logger = require('morgan');
 var cors = require('cors');
 var routePrefix = '/api'; // API route prefix
 var trendsRoute = require('./routes/trends');
 
 app.use(cors()); // used to enable CORS (Cross-origin resource sharing)
-app.use(logger('dev'));  // HTTP request logger middleware
 
-// configure app to use bodyParser()
-// this will let us get the data from a POST
+// log only 4xx and 5xx responses to console
+app.use(logger('dev', {
+    skip: function (req, res) {
+        return res.statusCode < 400
+    }
+}))
+
+// log all requests to access.log
+app.use(logger('common', {
+    stream: fs.createWriteStream(path.join(__dirname, 'access.log'), {
+        flags: 'a'
+    })
+}))
+
+/**
+ * Configure app to use bodyParser()
+ * This will let us get the data from a POST
+ */
 app.use(bodyParser.urlencoded({
     extended: true
 }));
@@ -27,8 +43,10 @@ router.get('/', function (req, res) {
     });
 });
 
-// REGISTER OUR ROUTES
-// all of our routes will be prefixed with /api
+/**
+ * REGISTER OUR API ROUTES
+ * All our API routes will be prefixed with '/api'
+ */
 app.use('/api', router);
 app.use(routePrefix + '/trends', trendsRoute);
 

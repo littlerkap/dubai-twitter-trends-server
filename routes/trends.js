@@ -2,21 +2,30 @@ var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
 var client = require('../twitter-config'); // Twitter API client
-var utils = require('../utils/utils'); // Helper function module
+var utils = require('../utils/utils'); // Helper module
 var socketapi = require('../utils/socketapi');
 
-/* GET top 25 trending topics in dubai. */
+/**
+ * This route path will match requests to '/api/trends'
+ */
 router.get('/', function (req, res, next) {
-  var options = {
-    id: 1940345 //WOEID for Dubai
-  };
-
-  client.get('trends/place', options)
+  /**
+   * Returns promise of the top 25 trending topics for a dubai
+   * @parameters 
+   *   id - Where On Earth ID of the dubai to return trending information.
+   * 
+   * Note: ID is static for dubai. We can get WOEID in queryparam and make it dynamic for any country/city
+   */
+  client.get('trends/place', {
+      id: 1940345
+    })
     .then(function (trends) {
       var aTrends = trends[0].trends; //Get trends in Array
       var _trends = _.take(aTrends, 25); // 25 Trends taken from the beginning.
 
-      // Send response with data and status code 200
+      /**
+       * Send response with trending topics and status code 200 OK
+       */
       res.status(200);
       res.json({
         success: true,
@@ -24,7 +33,9 @@ router.get('/', function (req, res, next) {
       });
     })
     .catch(function (error) {
-      // Send response with error objectand  status code 500
+      /**
+       * Send response with error object and status code 500
+       */
       res.status(500);
       res.json({
         success: false,
@@ -33,31 +44,45 @@ router.get('/', function (req, res, next) {
     });
 });
 
+/**
+ * This route path will match requests to '/api/trends/search'
+ */
 router.get('/search', function (req, res, next) {
-  var searchQuery = req.query.q; // Get query param 'q' from query string
+  /**
+   * Fetch query param 'q' from HTTP request object
+   */
+  var searchQuery = req.query.q;
 
+  /**
+   * Returns promise with collection of relevant Tweets matching a specified search query
+   *  @parameters 
+   *    q - search query
+   *    count - The number of tweets to return per page,
+   */
   client.get('search/tweets', {
       q: searchQuery,
-      count: 25
+      count: 30
     })
     .then(function (tweets) {
-      // Array of keys that should be reduced from the actual tweet object
-      var tweetObjKeys = ['created_at', 'text', 'user.name', 'user.screen_name', 'retweet_count', 'favorite_count'];
-      var _tweets = utils.reduceCollection(tweets.statuses, tweetObjKeys);
+      // Get reduced tweets using helper function
+      var _tweets = utils.reduceCollection(tweets.statuses, utils.tweetObjKeys);
 
-      console.log(tweets.search_metadata.count);
-
-      // Send response with data and status code 200
+      /**
+       * Send response with collection of tweets and status code 200 OK
+       */
       res.status(200);
       res.json({
         success: true,
         data: _tweets
       });
 
+      // This will fetch realtime tweets from streaming API
       socketapi.getRealtimeTweets();
     })
     .catch(function (error) {
-      // Send response with error objectand  status code 500
+      /**
+       * Send response with error object and status code 500
+       */
       res.status(500);
       res.json({
         success: false,

@@ -1,5 +1,9 @@
 var Twitter = require('twitter');
 
+/**
+ * Twitter configuration module
+ * @module client
+ */
 var client = new Twitter({
     consumer_key: "YJKeawjOfKnqn0gseviNffQ2f",
     consumer_secret: "8Te4xRLQy5TBFDjOnRx3e6wUkvJt1dJdYotLRmhBQEs6ZYiIX5",
